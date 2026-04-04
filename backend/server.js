@@ -1,58 +1,75 @@
-import express from 'express';
-import cors from 'cors';
-import 'dotenv/config';
+import express from "express";
+import cors from "cors";
+import "dotenv/config";
 
-import { clerkMiddleware } from '@clerk/express';
-import { connectDB } from './config/db.js';
-import doctorRouter from './routes/doctorRouter.js';
-import serviceRouter from './routes/serviceRouter.js';
-import appointmentRouter from './routes/appointmentRouter.js';
-import serviceAppointmentRouter from './routes/serviceAppointmentRouter.js';
+import { clerkMiddleware } from "@clerk/express";
+import { connectDB } from "./config/db.js";
+import doctorRouter from "./routes/doctorRouter.js";
+import serviceRouter from "./routes/serviceRouter.js";
+import appointmentRouter from "./routes/appointmentRouter.js";
+import serviceAppointmentRouter from "./routes/serviceAppointmentRouter.js";
 
 const app = express();
-const port = 4000;
+const port = process.env.PORT || 4000;
 
+// ✅ Allowed origins
 const allowedOrigins = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:5175",
-    "https://medicare-health-kw90ilsxq-veer-kunwar-singhs-projects.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  process.env.FRONTEND_URL, // production frontend
 ];
 
-// Middlewares
-app.use(cors(
-    {
-        origin: function (origin, callback){
-            if (!origin) return callback(null, true);
-            if(allowedOrigins.includes(origin)){
-                return callback(null, true)
-            }
+// ✅ CORS (FIXED)
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      console.log("Incoming origin:", origin);
 
-            return callback(new Error("Not allowed by CORS"));
-        },
-        credentials: true,
-        methods: ["GET", "POST","PUT","DELETE","OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        (origin && origin.endsWith(".vercel.app"))
+      ) {
+        return callback(null, true);
+      }
+
+      console.log("Blocked by CORS:", origin);
+      return callback(null, false); // ❗ crash nahi karega
     },
-));
+    credentials: true,
+  })
+);
+
+// ✅ Handle preflight requests
+app.options("*", cors());
+
+// Middlewares
 app.use(clerkMiddleware());
-app.use(express.json({ limit: "20mb"}));
-app.use(express.urlencoded({ limit: "20mb", extended: true}));
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ limit: "20mb", extended: true }));
 
-//DB
-connectDB();
+// ✅ DB connect properly
+connectDB()
+  .then(() => {
+    console.log("Database connected");
 
-// Routes
-app.use("/api/doctors", doctorRouter);
-app.use("/api/services", serviceRouter);
-app.use("/api/appointments",appointmentRouter);
-app.use("/api/service-appointments", serviceAppointmentRouter);
+    // Routes
+    app.use("/api/doctors", doctorRouter);
+    app.use("/api/services", serviceRouter);
+    app.use("/api/appointments", appointmentRouter);
+    app.use("/api/service-appointments", serviceAppointmentRouter);
 
-app.get('/', (req, res) => {
-    res.send("API WORKING");
-});
+    app.get("/", (req, res) => {
+      res.json({ status: "OK", message: "API running" });
+    });
 
-app.listen(port, () => {
-    console.log(`Server started on http://localhost:${port}`);
-    
-})
+    // Start server AFTER DB
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error("DB connection failed:", err);
+  });
