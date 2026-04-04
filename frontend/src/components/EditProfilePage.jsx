@@ -57,7 +57,7 @@ function dedupeAndSortSchedule(schedule = {}) {
 export default function EditProfilePage({ apiBase }) {
   const { id } = useParams();
   const navigate = useNavigate();
-const API_BASE = `${import.meta.env.VITE_API_BASE}/api/doctors`;
+  const API_BASE = `${import.meta.env.VITE_BACKEND_URL}/api/doctors`;
   const [doc, setDoc] = useState(null);
   const [editing, setEditing] = useState(false);
   const [imagePreview, setImagePreview] = useState("");
@@ -67,6 +67,8 @@ const API_BASE = `${import.meta.env.VITE_API_BASE}/api/doctors`;
   const [loading, setLoading] = useState(true);
 
   const styles = editProfilePageStyles;
+
+  // hii
 
   useEffect(() => {
     let cancelled = false;
