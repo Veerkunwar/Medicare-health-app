@@ -13,37 +13,55 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // ✅ Allowed origins
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:5175",
-  process.env.FRONTEND_URL, // production frontend
-];
+// const allowedOrigins = [
+//   "http://localhost:5173",
+//   "http://localhost:5174",
+//   "http://localhost:5175",
+//   process.env.FRONTEND_URL, // production frontend
+// ];
 
 // ✅ CORS (FIXED)
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      console.log("Incoming origin:", origin);
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       console.log("Incoming origin:", origin);
 
-      if (!origin) return callback(null, true);
+//       if (!origin) return callback(null, true);
 
-      if (
-        allowedOrigins.includes(origin) ||
-        (origin && origin.endsWith(".vercel.app"))
-      ) {
-        return callback(null, true);
-      }
+//       if (
+//         allowedOrigins.includes(origin) ||
+//         (origin && origin.endsWith(".vercel.app"))
+//       ) {
+//         return callback(null, true);
+//       }
 
-      console.log("Blocked by CORS:", origin);
-      return callback(null, false); // ❗ crash nahi karega
-    },
-    credentials: true,
-  })
-);
+//       console.log("Blocked by CORS:", origin);
+//       return callback(null, false); // ❗ crash nahi karega
+//     },
+//     credentials: true,
+//   })
+// );
 
 // ✅ Handle preflight requests
 // app.options("/*", cors());
+
+const allowedOrigins = [
+    "http://localhost:5173",  // Local dev
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "https://medicare-health-app-rho.vercel.app/"
+];
+app.use(cors({
+    origin: function(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("CORS not allowed"));
+        }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"], // ✅ Allow all needed headers
+}));
 
 // Middlewares
 app.use(clerkMiddleware());
