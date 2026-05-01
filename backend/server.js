@@ -49,7 +49,9 @@ const allowedOrigins = [
     "http://localhost:5173",  // Local dev
     "http://localhost:5174",
     "http://localhost:5175",
-    "https://medicare-health-app-rho.vercel.app/"
+    "https://medicare-health-app-rho.vercel.app/",
+    "https://medicare-frontend-zp4l.onrender.com",
+    "https://medicare-admin-gigb.onrender.com"
 ];
 app.use(cors({
     origin: function(origin, callback) {
